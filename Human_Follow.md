@@ -9,6 +9,7 @@ class Lidar:
         self.lidar.connect()
         self.lidar.startMotor()
         self.length = length
+        print("Lidar Setup Complete")
 
     def __del__(self):                  # Turn Off LiDAR
         self.lidar.stopMotor()
@@ -19,7 +20,7 @@ class Lidar:
     def check_distance(self, steering):
         detect = 0
         V = self.lidar.getVectors()
-        sub_value = __trans_steer(steering)
+        sub_value = self.__trans_steer(steering)
         for degrees, distance, _ in V :
             if degrees > 0 + sub_value and degrees < 360 - sub_value:
                 continue
@@ -39,11 +40,16 @@ class Lidar:
 
 > main.py
 ```python
+# Import----------------------------------
 from pop import Camera
 from pop.Pilot import Object_Follow
 from pop.Pilot import SerBot
 from lidar import Lidar
 import time
+
+print("Import Complete")
+# ------------------------------------------
+
 bot = None
 of = None
 lidar = None
@@ -52,6 +58,7 @@ flag = 0
 speed = 0
 
 def setup():
+    print("Setup Start")
     global bot, of, lidar
     
     length = [1000, 800, 600]   # 측정 거리
@@ -68,14 +75,13 @@ def setup():
 
 def loop():
     global person_not_found_cnt, flag, speed
-    detect = lidar.check_distance()
+    detect = lidar.check_distance(bot.steering)
 
     if detect != 3 :
         person = of.detect(index='person')
         if person:
-            person_not_found_cnt = 0
+            person_not_found_cnt = 15
             x = round(person['x'] * 4, 1)
-            rate = round(person['size_rate'], 1)
             
             speed = 90 if detect == 0 else 60 if detect == 1 else 30
             bot.forward(speed)
@@ -86,7 +92,7 @@ def loop():
         else:
             if person_not_found_cnt >= 10:
                 bot.setSpeed(50)
-                elif flag:
+                if flag:
                     bot.turnRight()
                     time.sleep(0.15)
                 else :
@@ -99,7 +105,6 @@ def loop():
         bot.stop()
  
 def main():
-    global bot
     setup()
     while True:
         try:
@@ -108,3 +113,8 @@ def main():
             break
     
     bot.stop()
+    
+if __name__ == '__main__':
+    main()
+    
+``` 
